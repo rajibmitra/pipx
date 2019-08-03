@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Sequence, Union
 
-from pipx.animate import animate
+from pipx.animate import animate, AsyncAnimate
 from pipx.constants import DEFAULT_PYTHON
 from pipx.util import WINDOWS, PipxError, rmdir
 
@@ -65,6 +65,15 @@ class Venv:
 
     def install_package(self, package_or_url: str, pip_args: List[str]) -> None:
         with animate(f"installing package {package_or_url!r}", self.do_animation):
+            if pip_args is None:
+                pip_args = []
+            cmd = ["install"] + pip_args + [package_or_url]
+            self._run_pip(cmd)
+
+    async def ainstall_package(self, package_or_url: str, pip_args: List[str]) -> None:
+        async with AsyncAnimate(
+            f"installing package {package_or_url!r}", self.do_animation
+        ):
             if pip_args is None:
                 pip_args = []
             cmd = ["install"] + pip_args + [package_or_url]

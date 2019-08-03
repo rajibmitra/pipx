@@ -3,27 +3,57 @@ import sys
 from typing import Dict
 from threading import Thread
 from time import sleep
+import asyncio
+
+
+class AsyncAnimate:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        self.task = asyncio.ensure_future(aanimate())
+        print("entering")
+        await asyncio.wait([self.task])
+
+    async def __aexit__(self, exc_type, exc, tb):
+        print("exiting")
+        self.task.cancel()
+
+
+async def aanimate():
+    while True:
+        print("waiting")
+        await asyncio.sleep(0.2)
+        print("waiting...")
+        await asyncio.sleep(0.2)
 
 
 @contextmanager
 def animate(message: str, do_animation: bool):
-    animate = {"do_animation": do_animation, "message": message}
+    max_width = len(message) + 3
+    spaces = " " * max_width
+    clear_line_str = f"\r{spaces}\r"
+    animate = {
+        "do_animation": do_animation,
+        "message": message,
+        "clear_line_str": clear_line_str,
+    }
     t = Thread(target=print_animation, args=(animate,))
     t.start()
     try:
         yield
     finally:
-        animate["do_animation"] = False
+        sys.stderr.write(clear_line_str + message + "\r")
         t.join(0)
+        animate["do_animation"] = False
 
 
 def print_animation(meta: Dict[str, bool]):
-    if not sys.stdout.isatty():
+    if not sys.stderr.isatty():
         return
 
     cur = "."
-    longest_len = 0
-    sleep(1)
+    sleep(0)
     while meta["do_animation"]:
         if cur == "":
             cur = "."
@@ -33,12 +63,9 @@ def print_animation(meta: Dict[str, bool]):
             cur = "..."
         else:
             cur = ""
+        if not meta["do_animation"]:
+            break
         message = f"{meta['message']}{cur}"
-        longest_len = max(len(message), longest_len)
-        sys.stdout.write(" " * longest_len)
-        sys.stdout.write("\r")
-        sys.stdout.write(message)
-        sys.stdout.write("\r")
-        sleep(0.5)
-    sys.stdout.write(" " * longest_len)
-    sys.stdout.write("\r")
+        sys.stderr.write(meta["clear_line_str"] + message + "\r")
+        sleep(2)
+    sys.stderr.write(meta["clear_line_str"])

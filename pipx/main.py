@@ -3,6 +3,7 @@
 
 """The command line interface to pipx"""
 
+import asyncio
 import argcomplete  # type: ignore
 import argparse
 import functools
@@ -115,7 +116,7 @@ def get_venv_args(parsed_args: Dict):
     return venv_args
 
 
-def run_pipx_command(args, binary_args: List[str]):
+async def run_pipx_command(args, binary_args: List[str]):
     setup(args)
     verbose = args.verbose if "verbose" in args else False
     pip_args = get_pip_args(vars(args))
@@ -174,7 +175,7 @@ def run_pipx_command(args, binary_args: List[str]):
                 "Cannot pass --include-deps if --use_binaries is not passed as well"
             )
         for dep in args.dependencies:
-            commands.inject(
+            await commands.inject(
                 venv_dir,
                 dep,
                 pip_args,
@@ -529,6 +530,10 @@ def split_run_argv(argv: List[str]) -> Tuple[List[str], List[str]]:
 
 
 def cli():
+    asyncio.get_event_loop().run_until_complete(_cli())
+
+
+async def _cli():
     """Entry point from command line"""
     try:
         args_to_parse, binary_args = split_run_argv(sys.argv)
@@ -541,7 +546,7 @@ def cli():
         if not parsed_pipx_args.command:
             parser.print_help()
             exit(1)
-        exit(run_pipx_command(parsed_pipx_args, binary_args))
+        exit(await run_pipx_command(parsed_pipx_args, binary_args))
     except PipxError as e:
         exit(e)
     except KeyboardInterrupt:

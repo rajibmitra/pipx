@@ -398,7 +398,7 @@ def _warn_if_not_on_path(local_bin_dir: Path):
         )
 
 
-def inject(
+async def inject(
     venv_dir: Path,
     package: str,
     pip_args: List[str],
@@ -418,7 +418,7 @@ def inject(
         )
 
     venv = Venv(venv_dir, verbose=verbose)
-    venv.install_package(package, pip_args)
+    await venv.ainstall_package(package, pip_args)
 
     if venv.get_venv_metadata_for_package(package).package_version is None:
         raise PipxError(f"Could not find package {package}. Is the name correct?")
