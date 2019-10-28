@@ -1,7 +1,5 @@
 import time
 
-import pytest  # type: ignore
-
 import pipx.animate
 from pipx.animate import (
     HIDE_CURSOR,
