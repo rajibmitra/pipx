@@ -33,6 +33,9 @@ def install_package(capsys, pipx_temp_env, caplog, package):
         # TODO assert on windows too
         # https://github.com/pipxproject/pipx/issues/217
         assert "symlink missing or pointing to unexpected location" not in captured.out
+    #if sys.platform.startswith("win"):
+        # test the logic here 
+    
     assert "not modifying" not in captured.out
     assert "is not on your PATH environment variable" not in captured.out
     for record in caplog.records:
